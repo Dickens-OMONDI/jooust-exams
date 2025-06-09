@@ -1,0 +1,129 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JOOOUST Online Exams</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
+    .hidden { display: none; }
+    #timer { text-align: right; color: darkred; font-weight: bold; }
+    button { margin-top: 10px; padding: 10px 15px; }
+    input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; }
+    .question { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="loginSection">
+      <h2>Login</h2>
+      <input type="text" id="username" placeholder="Enter name">
+      <input type="password" id="password" placeholder="Enter password">
+      <button onclick="login()">Login</button>
+      <p id="loginError" style="color:red;"></p>
+    </div><div id="quizSection" class="hidden">
+  <div id="timer">Time left: <span id="timeLeft">600</span> seconds</div>
+  <h2>JOOOUST ONLINE EXAMS</h2>
+  <form id="quizForm">
+    <div id="questionContainer"></div>
+    <button type="button" onclick="saveAndNext()" id="nextButton">Save & Next</button>
+    <button type="button" onclick="submitQuiz()" class="hidden" id="submitButton">Submit Quiz</button>
+  </form>
+</div>
+
+  </div>  <script>
+    const users = {
+      "Alice ": "pass1", "Akinyi Molet": "3334", "Ochieng Simon": "3443", "Ouma Cynthia": "3328", "Odhiambo Shadrack": "3368", "Angela Akinyi": "3556", "Awad Ahmed": "3388", "Onyango Juma": "3390", "Dennis Otieno": "3331", "Omollo Elijah": "3458", "Omondi David":"3477", "Ruzzel Odeke": "3462", "Owuor Fidel": "3502", "Oluoch Gilbert": "3337","Fredrick Omondi": "3444", "Fredrick Ombija": "3487","Pauline Awuor": "3354","Patrick Onyango": "3584","Joseph Ouma": "3449", "Were Steven": "3506",
+      ...Array.from({length: 97}, (_, i) => [`User${i+4}`, `pass${i+4}`]).reduce((a, [k, v]) => (a[k] = v, a), {})
+    };
+    const questions = [
+        { text: "what is capital city of kenya", name: "q1", options:["nairobi", "mombasa","kisumu", "kajiado"]},
+        { text: "who bring earth", name: "q1", options:["kama", "sudi","ghj", "gnbb"]},
+        { text: "what happen at maumau", name: "q1", options:["tryj", "dfgh","joel", "ojwang"]},
+    ];
+
+    let currentQuestion = 0;
+    const answers = {};
+    let timerInterval;
+    let timeRemaining = 20;
+    let currentUser = "";
+
+    function startTimer() {
+      document.getElementById("timeLeft").textContent = timeRemaining;
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        document.getElementById("timeLeft").textContent = timeRemaining;
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          alert("Time's up! Submitting quiz.");
+          submitQuiz();
+        }
+      }, 1000);
+    }
+
+    function login() {
+      const uname = document.getElementById("username").value;
+      const pwd = document.getElementById("password").value;
+      if (users[uname] === pwd) {
+        currentUser = uname;
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("quizSection").classList.remove("hidden");
+        startTimer();
+        loadQuestion();
+      } else {
+        document.getElementById("loginError").textContent = "Invalid login credentials.";
+      }
+    }
+
+    function loadQuestion() {
+      const q = questions[currentQuestion];
+      let html = `<div class="question"><label>${currentQuestion + 1} - ${q.text}</label><br>`;
+      q.options.forEach(opt => {
+        const checked = answers[q.name] === opt ? "checked" : "";
+        html += `<input type="radio" name="${q.name}" value="${opt}" ${checked}> ${opt}<br>`;
+      });
+      html += `<button type="button" onclick="clearAnswer('${q.name}')">Clear</button></div>`;
+      document.getElementById("questionContainer").innerHTML = html;
+      document.getElementById("nextButton").classList.toggle("hidden", currentQuestion >= questions.length - 1);
+      document.getElementById("submitButton").classList.toggle("hidden", currentQuestion < questions.length - 1);
+    }
+
+    function clearAnswer(name) {
+      const options = document.getElementsByName(name);
+      options.forEach(opt => opt.checked = false);
+    }
+
+    function saveAndNext() {
+      const q = questions[currentQuestion];
+      const selected = document.querySelector(`input[name='${q.name}']:checked`);
+      if (selected) {
+        answers[q.name] = selected.value;
+        currentQuestion++;
+        if (currentQuestion < questions.length) {
+          loadQuestion();
+        }
+      } else {
+        alert("Please select an answer.");
+      }
+    }
+
+    function submitQuiz() {
+      const q = questions[currentQuestion];
+      const selected = document.querySelector(`input[name='${q.name}']:checked`);
+      if (selected) {
+        answers[q.name] = selected.value;
+      }
+      clearInterval(timerInterval);
+      const submission = {
+        user: currentUser,
+        time: new Date().toLocaleString(),
+        answers: answers
+      };
+      const allSubs = JSON.parse(localStorage.getItem("submissions") || "[]");
+      allSubs.push(submission);
+      localStorage.setItem("submissions", JSON.stringify(allSubs));
+      alert("Quiz submitted successfully!");
+      location.reload();
+    }
+  </script></body>
+</html>
